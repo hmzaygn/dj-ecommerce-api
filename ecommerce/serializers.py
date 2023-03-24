@@ -18,15 +18,17 @@ class ItemSerializer(serializers.ModelSerializer):
             "category",
             "image",
             "description",
+            "slug",
         )
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
 
-    item = serializers.StringRelatedField()
+    item = ItemSerializer(read_only=True)
     item_id = serializers.IntegerField()
     user = serializers.StringRelatedField()
     user_id = serializers.IntegerField()
+    item_total_price = serializers.SerializerMethodField()
 
     class Meta:
         model = OrderItem
@@ -38,13 +40,17 @@ class OrderItemSerializer(serializers.ModelSerializer):
             "item",
             "item_id",
             "quantity",
+            "item_total_price"
         )
+
+    def get_item_total_price(self, obj):
+        return obj.quantity * obj.item.price
 
 
 class OrderSerializer(serializers.ModelSerializer):
 
-    items = OrderItemSerializer(many=True, read_only=True)
-    # item_id=serializers.IntegerField()
+    items = OrderItemSerializer(many=True, required=True)
+    order_total_price = serializers.SerializerMethodField()
 
     class Meta:
         model = Order
@@ -57,15 +63,37 @@ class OrderSerializer(serializers.ModelSerializer):
             "shipping_date",
             "ordered",
             "address",  
-            "payment"
+            "payment",
+            "order_total_price"
         )
+    
+    def create(self, validated_data):
+        items_data = validated_data.pop("items")
+        # validated_data["user_id"] = self.context["request"].user.id
+        order = Order.objects.create(**validated_data)
+        
+        for item in items_data:
+            created_item = OrderItem.objects.create(**item)
+            order.items.add(created_item)
+        
+        order.save()
+        return order
+    
+    def get_order_total_price(self, obj):
+        items = obj.items.all()
+
+        total = 0
+
+        for i in items:
+            total += i.quantity * i.item.price
+        return total
 
 
 class AddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = Address
         fields = (
-           "id", 
+            "id", 
             "user",
             "address",
             "city",
