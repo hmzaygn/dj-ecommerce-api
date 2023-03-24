@@ -58,7 +58,6 @@ class OrderSerializer(serializers.ModelSerializer):
             "id",
             "user",
             "items",
-            # "item_id",
             "start_date",
             "shipping_date",
             "ordered",
@@ -69,7 +68,6 @@ class OrderSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         items_data = validated_data.pop("items")
-        # validated_data["user_id"] = self.context["request"].user.id
         order = Order.objects.create(**validated_data)
         
         for item in items_data:
