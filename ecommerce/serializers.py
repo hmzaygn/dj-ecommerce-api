@@ -27,7 +27,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
     item = ItemSerializer(read_only=True)
     item_id = serializers.IntegerField()
     user = serializers.StringRelatedField()
-    user_id = serializers.IntegerField()
+    user_id = serializers.IntegerField(read_only=True)
     item_total_price = serializers.SerializerMethodField()
 
     class Meta:
@@ -45,6 +45,11 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
     def get_item_total_price(self, obj):
         return obj.quantity * obj.item.price
+    
+    def create(self, validated_data):
+        validated_data["user_id"] = self.context["request"].user.id
+        instance = OrderItem.objects.create(**validated_data)
+        return instance
 
 
 class OrderSerializer(serializers.ModelSerializer):

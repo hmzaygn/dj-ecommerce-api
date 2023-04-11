@@ -1,6 +1,8 @@
-from rest_framework import generics
+from rest_framework import generics, status
+from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated
+from django.shortcuts import get_object_or_404
 
 from .models import (
     Item,
@@ -36,6 +38,29 @@ class OrderItemMVS(ModelViewSet):
             return OrderItem.objects.all()
         
         return OrderItem.objects.filter(user=user)
+    
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        # obj = get_object_or_404(Item, id=request.data["item_id"])
+        orderItem_queryset = OrderItem.objects.filter(user_id=request.user.id, item_id=request.data["item_id"])
+        
+
+        if orderItem_queryset.exists():
+            data ={
+                "message": "You already have this item"
+            }
+            return Response(data, status=status.HTTP_201_CREATED)
+        else:
+            OrderItem.objects.create(user_id=request.user.id, item_id=request.data["item_id"], quantity=request.data["quantity"])
+            data ={
+                "message": "ADDED"
+            }
+            return Response(data, status=status.HTTP_201_CREATED)
+
+
+        
 
 
 class OrderMVS(ModelViewSet):
