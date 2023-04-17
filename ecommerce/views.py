@@ -1,8 +1,8 @@
-from rest_framework import generics, status
+from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
+from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAuthenticated
-from django.shortcuts import get_object_or_404
 
 from .models import (
     Item,
@@ -13,6 +13,7 @@ from .models import (
 from .serializers import (
     ItemSerializer,
     OrderItemSerializer,
+    OrderListSerializer,
     OrderSerializer,
     AddressSerializer,
     )
@@ -76,7 +77,20 @@ class OrderItemMVS(ModelViewSet):
 
         return Response(serializer.data)
 
-class OrderMVS(ModelViewSet):
+class OrderListView(ListAPIView):
+    queryset = Order.objects.all()
+    serializer_class = OrderListSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+
+        if user.is_staff:
+            return Order.objects.all()
+        
+        return Order.objects.filter(user=user)
+    
+class OrderCreateView(CreateAPIView):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
@@ -89,6 +103,18 @@ class OrderMVS(ModelViewSet):
         
         return Order.objects.filter(user=user)
 
+class OrderDetailView(RetrieveUpdateDestroyAPIView):
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+
+        if user.is_staff:
+            return Order.objects.all()
+        
+        return Order.objects.filter(user=user)
 
 class AddressMVS(ModelViewSet):
     queryset = Address.objects.all()

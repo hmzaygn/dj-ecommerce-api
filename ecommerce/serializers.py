@@ -52,7 +52,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
         return instance
 
 
-class OrderSerializer(serializers.ModelSerializer):
+class OrderListSerializer(serializers.ModelSerializer):
 
     items = OrderItemSerializer(many=True, required=True)
     order_total_price = serializers.SerializerMethodField()
@@ -71,17 +71,6 @@ class OrderSerializer(serializers.ModelSerializer):
             "order_total_price"
         )
     
-    def create(self, validated_data):
-        items_data = validated_data.pop("items")
-        order = Order.objects.create(**validated_data)
-        
-        for item in items_data:
-            created_item = OrderItem.objects.create(**item)
-            order.items.add(created_item)
-        
-        order.save()
-        return order
-    
     def get_order_total_price(self, obj):
         items = obj.items.all()
 
@@ -91,6 +80,32 @@ class OrderSerializer(serializers.ModelSerializer):
             total += i.quantity * i.item.price
         return total
 
+class OrderSerializer(serializers.ModelSerializer):
+
+    order_total_price = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Order
+        fields = (
+            "id",
+            "user",
+            "items",
+            "start_date",
+            "shipping_date",
+            "ordered",
+            "address",  
+            "payment",
+            "order_total_price"
+        )
+    
+    def get_order_total_price(self, obj):
+        items = obj.items.all()
+
+        total = 0
+
+        for i in items:
+            total += i.quantity * i.item.price
+        return total
 
 class AddressSerializer(serializers.ModelSerializer):
     class Meta:
