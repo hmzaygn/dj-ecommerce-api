@@ -51,11 +51,23 @@ class OrderItemSerializer(serializers.ModelSerializer):
         instance = OrderItem.objects.create(**validated_data)
         return instance
 
+class AddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Address
+        fields = (
+            "id", 
+            "user",
+            "address",
+            "city",
+            "country",
+        )
 
 class OrderListSerializer(serializers.ModelSerializer):
 
     items = OrderItemSerializer(many=True, required=True)
     order_total_price = serializers.SerializerMethodField()
+    address = AddressSerializer(read_only=True)
+    address_id = serializers.IntegerField()
 
     class Meta:
         model = Order
@@ -66,7 +78,8 @@ class OrderListSerializer(serializers.ModelSerializer):
             "start_date",
             "shipping_date",
             "ordered",
-            "address",  
+            "address_id",
+            "address", 
             "payment",
             "order_total_price"
         )
@@ -83,6 +96,8 @@ class OrderListSerializer(serializers.ModelSerializer):
 class OrderSerializer(serializers.ModelSerializer):
 
     order_total_price = serializers.SerializerMethodField()
+    address = AddressSerializer(read_only=True)
+    address_id = serializers.IntegerField()
 
     class Meta:
         model = Order
@@ -93,6 +108,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "start_date",
             "shipping_date",
             "ordered",
+            "address_id",
             "address",  
             "payment",
             "order_total_price"
@@ -106,14 +122,3 @@ class OrderSerializer(serializers.ModelSerializer):
         for i in items:
             total += i.quantity * i.item.price
         return total
-
-class AddressSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Address
-        fields = (
-            "id", 
-            "user",
-            "address",
-            "city",
-            "country",
-        )
