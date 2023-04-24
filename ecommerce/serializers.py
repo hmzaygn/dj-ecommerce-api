@@ -97,12 +97,16 @@ class OrderSerializer(serializers.ModelSerializer):
 
     order_total_price = serializers.SerializerMethodField()
     address = AddressSerializer(read_only=True)
+    # address = serializers.StringRelatedField()
     address_id = serializers.IntegerField()
+    user = serializers.StringRelatedField()
+    user_id = serializers.IntegerField()
 
     class Meta:
         model = Order
         fields = (
             "id",
+            "user_id",
             "user",
             "items",
             "start_date",

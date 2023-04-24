@@ -123,8 +123,4 @@ class AddressMVS(ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-
-        if user.is_staff:
-            return Address.objects.all()
-        
         return Address.objects.filter(user=user)
